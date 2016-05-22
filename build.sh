@@ -6,7 +6,4 @@ go get github.com/Masterminds/glide
 glide install
 
 # build binary
-CGO_ENABLED=0 go build -a
-
-# build docker image
-docker build -t mopsalarm/go-votes .
+go build

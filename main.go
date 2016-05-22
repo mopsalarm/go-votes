@@ -14,20 +14,6 @@ import (
 	"gopkg.in/redis.v3"
 )
 
-// Write one vote and read it out again
-// $ curl -XPOST -d '{"action": 5, "thing": 1337}' localhost:8080/votes/15000
-// $ curl localhost:8080/votes/15000
-// {"duration":0,"nextSyncId":1,"votes":[5,1337]}
-
-// Write another vote and read it
-// $ curl -XPOST -d '{"action": 7, "thing": 9000}' localhost:8080/votes/15000
-// $ curl localhost:8080/votes/15000
-// {"duration":0,"nextSyncId":2,"votes":[5,1337,7,9000]}
-
-// Query with sync id to get only new stuff
-// $ curl "localhost:8080/votes/15000?syncId=1"
-// {"duration":0,"nextSyncId":2,"votes":[7,9000]}
-
 func main() {
 	flagImport := flag.String("import", "", "A csv file to import. Each record must have 3 fields: userId,actionId,thingId")
 	flagRedis := flag.String("redis", "localhost:6379", "Address of the redis server")
