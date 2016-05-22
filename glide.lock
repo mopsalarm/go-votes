@@ -1,5 +1,5 @@
-hash: 95390b7907216e8af7bbcf4e550e8c8cb63ad205826b22ba46b7fc7f1340ec17
-updated: 2016-05-22T14:41:01.425571+02:00
+hash: d8ef7c37600f570d2a280ebe142e1153c8aaa668d94276eb6401e0b708afcf52
+updated: 2016-05-22T21:31:22.093133+02:00
 imports:
 - name: github.com/gin-gonic/gin
   version: 542be2fe77724f800fcab7eb6c01a4e597fb8506
@@ -18,6 +18,8 @@ imports:
   - context
 - name: gopkg.in/bsm/ratelimit.v1
   version: db14e161995a5177acef654cb0dd785e8ee8bc22
+- name: gopkg.in/cheggaaa/pb.v1
+  version: 8808370bf63524e115da1371ba42bce6739f3a6b
 - name: gopkg.in/go-playground/validator.v8
   version: c193cecd124b5cc722d7ee5538e945bdb3348435
 - name: gopkg.in/redis.v3
