@@ -3,20 +3,24 @@ package main
 import (
 	"encoding/csv"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
+	"errors"
+	"io"
+
 	"github.com/gin-gonic/gin"
+	"gopkg.in/cheggaaa/pb.v1"
 	"gopkg.in/redis.v3"
 )
 
 func main() {
 	flagImport := flag.String("import", "", "A csv file to import. Each record must have 3 fields: userId,actionId,thingId")
 	flagRedis := flag.String("redis", "localhost:6379", "Address of the redis server")
+	flagListen := flag.String("listen", "0.0.0.0:8080", "Listen address for the server")
 	flag.Parse()
 
 	client := redis.NewClient(&redis.Options{Addr: *flagRedis})
@@ -45,7 +49,7 @@ func main() {
 		storeVote(client, c)
 	})
 
-	r.Run(":8080")
+	r.Run(*flagListen)
 }
 
 type Vote struct {
@@ -60,8 +64,13 @@ func storeVote(client *redis.Client, c *gin.Context) {
 		return
 	}
 
+	if vote.Action&0xf != vote.Action {
+		c.AbortWithError(http.StatusBadRequest, errors.New("Action is invalid"))
+		return
+	}
+
 	userId := c.Param("user")
-	voteValue := int64(vote.Thing)*10 + int64(vote.Action)
+	voteValue := int64(vote.Thing)<<4 + int64(vote.Action&0xf)
 
 	key := "user:" + userId + ":votes"
 	client.RPush(key, strconv.FormatInt(voteValue, 10))
@@ -90,8 +99,8 @@ func getVotesForUser(client *redis.Client, c *gin.Context) {
 	for idx, val := range result {
 		parsed, _ := strconv.ParseInt(val, 10, 32)
 
-		votes[2*idx] = uint32(parsed % 10)
-		votes[2*idx+1] = uint32(parsed) / 10
+		votes[2*idx] = uint32(parsed & 0xf)
+		votes[2*idx+1] = uint32(parsed) >> 4
 	}
 
 	// calculate next sync id as the current length of the vote log.
@@ -108,17 +117,28 @@ func importCsvFile(client *redis.Client, csvFile string) {
 	count := 0
 	fp, err := os.Open(csvFile)
 	if err != nil {
-		fmt.Println("Could not open csv file", err)
-		os.Exit(1)
+		log.Fatal("Could not open csv file", err)
+		return
 	}
 
 	defer fp.Close()
 
-	reader := csv.NewReader(fp)
-	reader.FieldsPerRecord = 3
+	var reader io.Reader = fp
+	if info, err := fp.Stat(); err == nil {
+		bar := pb.New64(info.Size())
+		bar.Units = pb.U_BYTES
+		bar.RefreshRate = 1 * time.Second
+		bar.Start()
+
+		defer bar.Finish()
+
+		reader = bar.NewProxyReader(reader)
+	}
+
+	csvReader := csv.NewReader(reader)
+	csvReader.FieldsPerRecord = 3
 	for {
-		count += 1
-		record, err := reader.Read()
+		record, err := csvReader.Read()
 		if record == nil {
 			break
 		}
@@ -129,16 +149,27 @@ func importCsvFile(client *redis.Client, csvFile string) {
 		}
 
 		userId := record[0]
-		actionId, _ := strconv.ParseInt(record[1], 10, 64)
-		itemId, _ := strconv.ParseInt(record[2], 10, 64)
+		actionId, err := strconv.ParseInt(record[1], 10, 64)
+		if err != nil {
+			log.Fatal("Could not parse action id", actionId)
+		}
 
-		voteValue := itemId*10 + actionId
+		itemId, err := strconv.ParseInt(record[2], 10, 64)
+		if err != nil {
+			log.Fatal("Could not parse item id", actionId)
+		}
+
+		if actionId&0xf != actionId {
+			log.Fatal("Invalid action id:", actionId)
+		}
+
+		voteValue := (itemId << 4) | (actionId & 0xf)
 
 		key := "user:" + userId + ":votes"
 		client.RPush(key, strconv.FormatInt(voteValue, 10))
 
-		if count%100000 == 0 {
-			fmt.Println(count)
-		}
+		count += 1
 	}
+
+	log.Println("Number of votes read:", count)
 }
