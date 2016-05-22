@@ -1,0 +1,32 @@
+hash: 95390b7907216e8af7bbcf4e550e8c8cb63ad205826b22ba46b7fc7f1340ec17
+updated: 2016-05-22T14:41:01.425571+02:00
+imports:
+- name: github.com/gin-gonic/gin
+  version: 542be2fe77724f800fcab7eb6c01a4e597fb8506
+  subpackages:
+  - binding
+  - render
+- name: github.com/golang/protobuf
+  version: 2402d76f3d41f928c7902a765dfc872356dd3aad
+  subpackages:
+  - proto
+- name: github.com/manucorporat/sse
+  version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
+- name: golang.org/x/net
+  version: f315505cf3349909cdf013ea56690da34e96a451
+  subpackages:
+  - context
+- name: gopkg.in/bsm/ratelimit.v1
+  version: db14e161995a5177acef654cb0dd785e8ee8bc22
+- name: gopkg.in/go-playground/validator.v8
+  version: c193cecd124b5cc722d7ee5538e945bdb3348435
+- name: gopkg.in/redis.v3
+  version: 5183f8dcde9737db7583dbfa9881800dba26e3fa
+  subpackages:
+  - internal
+  - internal/consistenthash
+  - internal/hashtag
+  - internal/pool
+- name: gopkg.in/yaml.v2
+  version: a83829b6f1293c91addabc89d0571c246397bbf4
+devImports: []

@@ -1,0 +1,4 @@
+package: github.com/mopsalarm/go-votes
+import:
+- package: gopkg.in/redis.v3
+- package: github.com/gin-gonic/gin
